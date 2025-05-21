@@ -3,7 +3,11 @@ import numpy as np
 import mediapipe as mp
 from tensorflow.keras.models import load_model
 
-model = load_model('hand_pose_classifier_20_64_nadam.h5')
+# 모델 불러오기 (Conv1D용)
+model = load_model('hand_pose_conv1d_model.h5')
+
+# 라벨 리스트 (1~10)
+labels = [str(i) for i in range(1, 11)]
 
 # MediaPipe Hands 초기화
 mp_hands = mp.solutions.hands
@@ -11,18 +15,15 @@ hands = mp_hands.Hands(static_image_mode=False,
                        max_num_hands=1,
                        min_detection_confidence=0.7)
 
-# 라벨 (예측 숫자 복원용)
-labels = [str(i) for i in range(1, 11)]  # 1~10
-
-# 웹캠 열기
-ip_webcam_url = "http://192.168.219.196:8080/video"
+# IP Webcam 주소 (스마트폰에서 실행 중인 IP Webcam 앱 주소)
+ip_webcam_url = 'http://192.168.219.112:8080/video'  # 자신의 스마트폰 IP로 수정
 cap = cv2.VideoCapture(ip_webcam_url)
-
-print("[i] 웹캠 시작. 손을 카메라 앞에 가져다 대세요.")
+print("[i] IP Webcam 연결 시작. 손을 스마트폰 카메라 앞에 가져다 대세요.")
 
 while True:
     ret, frame = cap.read()
     if not ret:
+        print("[!] 프레임을 가져올 수 없습니다.")
         break
 
     h, w, _ = frame.shape
@@ -31,21 +32,14 @@ while True:
 
     if result.multi_hand_landmarks:
         for hand_landmarks in result.multi_hand_landmarks:
-            # 1. 좌표 추출
-            coords = []
-            for lm in hand_landmarks.landmark:
-                coords.append(lm.x)
-                coords.append(lm.y)
+            coords = [[lm.x, lm.y] for lm in hand_landmarks.landmark]
+            coords = np.array(coords).reshape(1, 21, 2)
 
-            coords = np.array(coords).reshape(1, -1)
-
-            # 2. 예측
-            pred = model.predict(coords)
+            pred = model.predict(coords, verbose=0)
             pred_label = labels[np.argmax(pred)]
             confidence = np.max(pred)
 
-            # 3. 시각화
-            # bounding box 표시
+            # 손 박스 표시
             x_list = [lm.x for lm in hand_landmarks.landmark]
             y_list = [lm.y for lm in hand_landmarks.landmark]
             xmin = int(min(x_list) * w) - 20
@@ -59,10 +53,9 @@ while True:
             cv2.putText(frame, f"{pred_label} ({confidence:.2f})", (xmin, ymin - 10),
                         cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 255, 0), 2)
 
-    # 결과 출력
-    cv2.imshow("Hand Gesture Recognition", frame)
+    cv2.imshow("Hand Sign Prediction (IP Webcam)", frame)
 
-    if cv2.waitKey(1) == 27:  # ESC 종료
+    if cv2.waitKey(1) == 27:  # ESC 키로 종료
         break
 
 cap.release()

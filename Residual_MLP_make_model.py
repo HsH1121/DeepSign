@@ -8,7 +8,7 @@ from tensorflow.keras.utils import to_categorical
 import joblib
 
 # 1. 데이터 불러오기
-df = pd.read_csv("hand_features_with_orientation.csv")  # 예: 15~16개 특징 + label
+df = pd.read_csv("hand_features_with_orientation_with_han.csv", encoding="cp949")  # 예: 15~16개 특징 + label
 
 X = df.drop(columns=["label"]).values
 y = df["label"].values
@@ -62,5 +62,25 @@ model.compile(optimizer='adam', loss='categorical_crossentropy', metrics=['accur
 model.fit(X_train, y_train, validation_data=(X_test, y_test), epochs=30, batch_size=32)
 
 # 5. 저장
-model.save("residual_mlp_model.h5")
+model.save("residual_mlp_model_with_han.h5")
 print("[✓] 모델 저장 완료")
+
+from sklearn.metrics import accuracy_score
+
+# 테스트셋 예측
+y_pred_prob = model.predict(X_test)
+y_pred = np.argmax(y_pred_prob, axis=1)
+y_true = np.argmax(y_test, axis=1)
+
+# 라벨 인코더로 디코딩
+y_true_labels = le.inverse_transform(y_true)
+y_pred_labels = le.inverse_transform(y_pred)
+
+# 레이블별 정확도 계산
+unique_labels = np.unique(y_true_labels)
+print("레이블별 정확도")
+
+for label in unique_labels:
+    indices = (y_true_labels == label)
+    accuracy_per_label = accuracy_score(y_true_labels[indices], y_pred_labels[indices])
+    print(f"{label} : {accuracy_per_label * 100:.2f}%")

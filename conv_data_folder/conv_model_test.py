@@ -15,13 +15,15 @@ hands = mp_hands.Hands(static_image_mode=False,
                        max_num_hands=1,
                        min_detection_confidence=0.7)
 
-# 웹캠 열기
-cap = cv2.VideoCapture(0)
-print("[i] 웹캠 시작. 손을 카메라 앞에 가져다 대세요.")
+# IP Webcam 주소 (스마트폰에서 실행 중인 IP Webcam 앱 주소)
+ip_webcam_url = 'http://192.168.0.5:8080/video'  # 자신의 스마트폰 IP로 수정
+cap = cv2.VideoCapture(ip_webcam_url)
+print("[i] IP Webcam 연결 시작. 손을 스마트폰 카메라 앞에 가져다 대세요.")
 
 while True:
     ret, frame = cap.read()
     if not ret:
+        print("[!] 프레임을 가져올 수 없습니다.")
         break
 
     h, w, _ = frame.shape
@@ -30,13 +32,10 @@ while True:
 
     if result.multi_hand_landmarks:
         for hand_landmarks in result.multi_hand_landmarks:
-            coords = []
-            for lm in hand_landmarks.landmark:
-                coords.append([lm.x, lm.y])  # (21, 2)
+            coords = [[lm.x, lm.y] for lm in hand_landmarks.landmark]
+            coords = np.array(coords).reshape(1, 21, 2)
 
-            coords = np.array(coords).reshape(1, 21, 2)  # Conv1D 모델 입력 형태
-
-            pred = model.predict(coords)
+            pred = model.predict(coords, verbose=0)
             pred_label = labels[np.argmax(pred)]
             confidence = np.max(pred)
 
@@ -54,8 +53,7 @@ while True:
             cv2.putText(frame, f"{pred_label} ({confidence:.2f})", (xmin, ymin - 10),
                         cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 255, 0), 2)
 
-    # 프레임 출력
-    cv2.imshow("Hand Sign Prediction (Conv1D)", frame)
+    cv2.imshow("Hand Sign Prediction (IP Webcam)", frame)
 
     if cv2.waitKey(1) == 27:  # ESC 키로 종료
         break

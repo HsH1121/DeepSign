@@ -1,9 +1,29 @@
 import cv2
 import numpy as np
 import mediapipe as mp
+import os
 from tensorflow.keras.models import load_model
+from PIL import ImageFont, ImageDraw, Image
 
-model = load_model('hand_pose_classifier_20_64_nadam.h5')
+model = load_model('hand_pose_classifier_20_64_nadam_with_han.h5')
+
+# 레이블 데이터 리스트 생성
+label_path = "D:/University/4-1/DeepLearning_Programming/DLP_Project/DLP_Project/dataset_raw"
+labels = [
+    name for name in os.listdir(label_path)
+    if os.path.isdir(os.path.join(label_path, name))
+]
+
+# 한글 폰트 파일 경로 지정
+font_path = "NanumGothic.ttf"
+font = ImageFont.truetype(font_path, 40)
+
+# 한글 쓰기용 함수
+def draw_text_with_pil(img, text, position, color=(0,255,0)):
+    img_pil = Image.fromarray(img)
+    draw = ImageDraw.Draw(img_pil)
+    draw.text(position, text, font=font, fill=color)
+    return np.array(img_pil)
 
 # MediaPipe Hands 초기화
 mp_hands = mp.solutions.hands
@@ -12,7 +32,7 @@ hands = mp_hands.Hands(static_image_mode=False,
                        min_detection_confidence=0.7)
 
 # 라벨 (예측 숫자 복원용)
-labels = [str(i) for i in range(1, 11)]  # 1~10
+# labels = [str(i) for i in range(1, 42)]  # 1~41
 
 # 웹캠 열기
 ip_webcam_url = "http://192.168.219.196:8080/video"
@@ -41,7 +61,8 @@ while True:
 
             # 2. 예측
             pred = model.predict(coords)
-            pred_label = labels[np.argmax(pred)]
+            pred_idx = np.argmax(pred)
+            pred_label = labels[pred_idx]
             confidence = np.max(pred)
 
             # 3. 시각화
@@ -56,8 +77,8 @@ while True:
             xmax, ymax = min(xmax, w), min(ymax, h)
 
             cv2.rectangle(frame, (xmin, ymin), (xmax, ymax), (0, 255, 0), 2)
-            cv2.putText(frame, f"{pred_label} ({confidence:.2f})", (xmin, ymin - 10),
-                        cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 255, 0), 2)
+            text = f"{pred_label} ({confidence:.2f})"
+            frame = draw_text_with_pil(frame, text, (10, 30), color=(0, 255, 0))
 
     # 결과 출력
     cv2.imshow("Hand Gesture Recognition", frame)

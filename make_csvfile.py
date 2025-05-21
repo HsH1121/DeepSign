@@ -1,10 +1,11 @@
 import cv2
 import mediapipe as mp
+import numpy as np
 import os
 import csv
 
 # 폴더 경로 설정
-dataset_dir = 'dataset_raw'  # 너가 저장해둔 이미지 폴더 최상위 경로
+dataset_dir = 'dataset_raw'  # 저장해둔 이미지 폴더 최상위 경로
 output_csv = 'hand_landmarks.csv'  # 최종 CSV 파일 이름
 
 # MediaPipe Hands 초기화
@@ -32,7 +33,15 @@ with open(output_csv, mode='w', newline='') as f:
         for img_name in sorted(os.listdir(label_path)):
             img_path = os.path.join(label_path, img_name)
 
-            img = cv2.imread(img_path)
+            # ---- 한글 경로 호환 방식으로 이미지 로드 ----
+            try:
+                with open(img_path, 'rb') as f:
+                    img_array = np.asarray(bytearray(f.read()), dtype=np.uint8)
+                    img = cv2.imdecode(img_array, cv2.IMREAD_COLOR)
+            except Exception as e:
+                print(f"[!] 파일 열기 실패: {img_path} — {e}")
+                continue
+
             if img is None:
                 print(f"[!] 이미지 로드 실패: {img_path}")
                 continue
@@ -41,12 +50,12 @@ with open(output_csv, mode='w', newline='') as f:
             result = hands.process(img_rgb)
 
             if result.multi_hand_landmarks:
-                hand = result.multi_hand_landmarks[0]  # 첫 번째 손만 사용
+                hand = result.multi_hand_landmarks[0]
                 row = []
                 for lm in hand.landmark:
                     row.append(lm.x)
                     row.append(lm.y)
-                row.append(int(label_name))  # 폴더명이 정답 라벨
+                row.append(label_name)
                 writer.writerow(row)
                 print(f"[✓] 좌표 저장 완료: {img_name}")
             else:
