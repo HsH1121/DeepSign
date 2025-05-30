@@ -25,13 +25,15 @@ img_count = 0
 max_additional = 800  # 추가 촬영할 최대 수
 
 # 웹캠 열기
-ip_webcam_url = "http://192.168.219.196:8080/video"
+ip_webcam_url = ("http://192.168.219.105:8080/video")
 
 cap = cv2.VideoCapture(ip_webcam_url)
 
 print("[i] 웹캠 시작됨. 손 detect 후, 스페이스바 누르면 crop된 손 저장. ESC로 종료.")
 
 last_saved_time = 0 # 마지막 저장 시간
+
+padding = 80
 
 while True:
     ret, frame = cap.read()
@@ -49,10 +51,10 @@ while True:
             # 손 관절 좌표로 bounding box 계산
             x_list = [lm.x for lm in hand_landmarks.landmark]
             y_list = [lm.y for lm in hand_landmarks.landmark]
-            xmin = int(min(x_list) * w) - 20
-            ymin = int(min(y_list) * h) - 20
-            xmax = int(max(x_list) * w) + 20
-            ymax = int(max(y_list) * h) + 20
+            xmin = int(min(x_list) * w) - padding
+            ymin = int(min(y_list) * h) - padding
+            xmax = int(max(x_list) * w) + padding
+            ymax = int(max(y_list) * h) + padding
 
             xmin, ymin = max(xmin, 0), max(ymin, 0)
             xmax, ymax = min(xmax, w), min(ymax, h)

@@ -6,7 +6,7 @@ import csv
 
 # 폴더 경로 설정
 dataset_dir = 'dataset_raw'  # 저장해둔 이미지 폴더 최상위 경로
-output_csv = 'hand_landmarks.csv'  # 최종 CSV 파일 이름
+output_csv = ('hand_landmarks_with_han.csv')  # 최종 CSV 파일 이름
 
 # MediaPipe Hands 초기화
 mp_hands = mp.solutions.hands
@@ -23,12 +23,18 @@ with open(output_csv, mode='w', newline='') as f:
         header += [f'x{i}', f'y{i}']
     header.append('label')
     writer.writerow(header)
-
+    
+    # 레이블별 인식 성공률 리스트
+    success_rate_dict = {}
+    
     # 폴더 내 모든 이미지 순회
     for label_name in sorted(os.listdir(dataset_dir)):
         label_path = os.path.join(dataset_dir, label_name)
         if not os.path.isdir(label_path):
             continue
+
+        success_count = 0
+        count = 0
 
         for img_name in sorted(os.listdir(label_path)):
             img_path = os.path.join(label_path, img_name)
@@ -58,7 +64,17 @@ with open(output_csv, mode='w', newline='') as f:
                 row.append(label_name)
                 writer.writerow(row)
                 print(f"[✓] 좌표 저장 완료: {img_name}")
+                success_count += 1
             else:
                 print(f"[!] 손 인식 실패: {img_name} (스킵)")
+
+            count += 1
+
+        # 레이블당 인식 성공률
+        success_rate_dict[label_name] = success_count / count * 100
+
+    print("레이블당 인식 성공률")
+    for label_name, success_rate in success_rate_dict.items():
+        print(f"[{label_name}] 인식률: {success_rate}%")
 
 print(f"\n[i] CSV 저장 완료: {output_csv}")

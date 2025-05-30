@@ -12,7 +12,7 @@ from sklearn.metrics import accuracy_score
 import joblib
 import pandas as pd
 # 1. 데이터 로드
-df = pd.read_csv('new_hand_features_with_orientation_with_han.csv', encoding = "cp949")
+df = pd.read_csv('hand_features_with_orientation_with_han.csv', encoding = "cp949")
 print(df['label'].value_counts())
 
 # 2. 특징/레이블 분리
@@ -23,6 +23,7 @@ num_labels = len(np.unique(y))
 # scaler.pkl 파일 재생성
 scaler = MinMaxScaler()
 scaler.fit(X)  # 여기서 X는 25개의 feature가 들어있는 데이터셋
+X = scaler.transform(X)
 
 # 3. 한글 레이블 데이터를 정수로 매핑
 le = LabelEncoder()
@@ -59,17 +60,17 @@ model.compile(optimizer='nadam',
               metrics=['accuracy'])
 
 # 7. 학습
-model.fit(X_train, y_train, epochs=20, batch_size=64,
+model.fit(X_train, y_train, epochs=25, batch_size=64,
           validation_data=(X_val, y_val))
 
-# 8. 레이블별 정확도
+# 8. 레이블당 정확도
 y_val_pred = model.predict(X_val)
 y_pred_labels = np.argmax(y_val_pred, axis=1)
 y_true_labels = np.argmax(y_val, axis=1)
 
 unique_labels = np.unique(y_true_labels)
 
-print("레이블별 정확도")
+print("레이블당 정확도")
 for label in unique_labels:
     indices = (y_true_labels == label)
     acc = accuracy_score(y_true_labels[indices], y_pred_labels[indices])
@@ -77,6 +78,6 @@ for label in unique_labels:
     print(f"[{label_name}] 정확도: {acc * 100:.2f}%")
 
 # 9. 저장
-model.save('new_featured_data_hand_pose_classifier_20_64_nadam_with_han.h5')
+model.save('featured_data_hand_pose_classifier_20_64_nadam_with_han.h5')
 joblib.dump(le, "label_encoder.pkl")
 joblib.dump(scaler, "scaler.pkl")
