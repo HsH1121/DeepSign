@@ -38,7 +38,7 @@ padding = 80
 while True:
 
     # ====== iPWebcam 프레임 동기화용 코드 ======
-    for _ in range(2):
+    for _ in range(5):
         cap.grab()
 
     ret, frame = cap.retrieve()

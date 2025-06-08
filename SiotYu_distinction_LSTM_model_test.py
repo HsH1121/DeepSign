@@ -13,7 +13,7 @@ VOCAB_SIZE = len(char_to_index)
 max_len = 20  # 학습 시 사용한 시퀀스 길이와 동일
 
 # 모델 불러오기
-model = load_model("SiotYu_distinction.h5")
+model = load_model("SiotYu_distinction_2.h5")
 
 # ✅ 연속 예측 함수
 def predict_jamo_sequence(seed_jamo, n_predict=5):

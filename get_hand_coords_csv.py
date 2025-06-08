@@ -16,9 +16,9 @@ mp_drawing = mp.solutions.drawing_utils
 
 # 숫자 / 자모 분류 기준
 digits_labels = {str(i) for i in range(1, 11)}
-jaum_labels = {'ㄱ','ㄴ','ㄷ','ㄹ','ㅁ','ㅂ','ㅅ','ㅇ','ㅈ','ㅊ','ㅋ','ㅌ','ㅍ','ㅎ', 'conversion_model_1'}  # ㅅ 제외
+jaum_labels = {'ㄱ','ㄴ','ㄷ','ㄹ','ㅁ','ㅂ','ㅅ','ㅇ','ㅈ','ㅊ','ㅋ','ㅌ','ㅍ','ㅎ', 'conversion_model_1', 'space', 'back_space'}
 moum_labels = {'ㅏ','ㅐ','ㅑ','ㅒ','ㅓ','ㅔ','ㅕ','ㅖ','ㅗ','ㅘ','ㅙ','ㅚ',
-               'ㅛ','ㅜ','ㅝ','ㅞ','ㅟ','ㅡ','ㅢ','ㅣ', 'conversion_model_1'}
+               'ㅛ','ㅜ','ㅝ','ㅞ','ㅟ','ㅡ','ㅢ','ㅣ', 'conversion_model_1', 'space', 'back_space'} # ㅠ 제외
 hangul_labels = jaum_labels | moum_labels
 
 # CSV 파일 준비
