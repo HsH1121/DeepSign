@@ -6,7 +6,6 @@ def get_hand_size(coords):
     coords = np.array(coords)
     x_min, y_min = np.min(coords[:, 0]), np.min(coords[:, 1])
     x_max, y_max = np.max(coords[:, 0]), np.max(coords[:, 1])
-
     return np.linalg.norm([x_max - x_min, y_max - y_min])
 
 # 손가락 마디별 각도 계산
@@ -100,10 +99,10 @@ def extract_features(row):
     return pd.Series(features)
 
 # CSV 로딩
-df = pd.read_csv("hand_landmarks_with_han.csv", encoding="cp949")
+df = pd.read_csv("hangul.csv", encoding="cp949")
 feature_df = df.drop(columns=['label']).apply(extract_features, axis=1)
 feature_df['label'] = df['label']
 
 # 저장
-feature_df.to_csv("hand_features_with_orientation_with_han.csv", index=False, encoding="cp949")
-print("[✓] 거리 무관 feature-data 저장 완료.")
+feature_df.to_csv("hangul_feature.csv", index=False, encoding="cp949")
+print("[✓] feature-data 저장 완료.")

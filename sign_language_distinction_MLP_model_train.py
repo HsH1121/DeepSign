@@ -11,11 +11,8 @@ from sklearn.preprocessing import MinMaxScaler
 from sklearn.metrics import accuracy_score
 import joblib
 import pandas as pd
-
-LABEL_SET = "hangul"
-
 # 1. 데이터 로드
-df = pd.read_csv('dataset_hangul.csv', encoding = "cp949")
+df = pd.read_csv('hangul_feature.csv', encoding = "cp949")
 print(df['label'].value_counts())
 
 # 2. 특징/레이블 분리

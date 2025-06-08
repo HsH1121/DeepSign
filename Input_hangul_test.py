@@ -23,7 +23,7 @@ index_to_char = {idx: char for char, idx in char_to_index.items()}
 VOCAB_SIZE = len(char_to_index)
 MAX_LEN = 20  # 학습 시 사용한 max_len과 동일하게 설정해야 함
 
-SiotYu_distinction_model = load_model(r"D:\University\4-1\DeepLearning_Programming\DeepSign\hangul_test_4\SiotYu_distinction.h5")
+SiotYu_distinction_model = load_model("SiotYu_distinction.h5")
 
 # ====== 모델 로드 함수 ======
 def load_model_set(key):
@@ -108,7 +108,7 @@ def extract_feature_from_coords(coords):
     hand_size = get_hand_size(coords)
     tips = [4, 8, 12, 16, 20]
     for i in range(len(tips) - 1):
-        d = euclidean_distance(coords[tips[i]], coords[tips[i+1]], hand_size)
+        d = euclidean_distance(coords[tips[i]], coords[tips[i + 1]], hand_size)
         distances.append(d)
         features.append(d)
     features.append(distances[0] / distances[1] if distances[1] != 0 else 0.0)
@@ -116,7 +116,7 @@ def extract_feature_from_coords(coords):
     return np.array(features)
 
 # ====== 한글 텍스트 출력 함수 ======
-def draw_text_with_pil(img, text, position, color=(0,255,0)):
+def draw_text_with_pil(img, text, position, color=(0, 255, 0)):
     img_pil = Image.fromarray(img)
     draw = ImageDraw.Draw(img_pil)
     draw.text(position, text, font=font, fill=color)
@@ -273,7 +273,7 @@ def compose_hangul(label_list):
 def input_label(label):
     global final_inputed_labels, inputed_moum
     inputed_moum = False
-    final_inputed_labels = final_inputed_labels + str(label)
+    final_inputed_labels = final_inputed_labels + label
 
 # ====== 한글 입력 후 초기화 진행 함수 ======
 def reset_jamo_input(label):
@@ -322,15 +322,16 @@ hands = mp_hands.Hands(static_image_mode=False, max_num_hands=1, min_detection_c
 mp_drawing = mp.solutions.drawing_utils
 
 # ====== 자모 조합, 출력용 ======
-final_inputed_labels = "" # 최종 입력 문자열
-label_history = deque(maxlen = 20) # 최근 20 Frame 예측
+final_inputed_labels = ""  # 최종 입력 문자열
+label_history = deque(maxlen=20)  # 최근 20 Frame 예측
 last_added_time = 0
 label_compose_check_list = []
 inputed_moum = False
 last_input = ""
+double_moum_list = ['ㅘ', 'ㅙ', 'ㅚ', 'ㅝ', 'ㅞ', 'ㅟ', 'ㅢ']
 
-distinguished_SiotYu = '' # 매 프레임마다 판별 모델 호출을 방지하기 위한 값(판별 시 ㅅ/ㅠ 입력)
-inputed_jamo_list = [] # LSTM에 입력값으로 넣을 이전 입력값
+distinguished_SiotYu = ''  # 매 프레임마다 판별 모델 호출을 방지하기 위한 값(판별 시 ㅅ/ㅠ 입력)
+inputed_jamo_list = []  # LSTM에 입력값으로 넣을 이전 입력값
 
 # ====== 실시간 웹캠 ======
 ip_webcam_url = ("http://192.168.219.177:8080/video")
@@ -359,26 +360,21 @@ while cap.isOpened():
             if len(coords) == 21:
                 features = extract_feature_from_coords(coords)
                 if len(features) >= 15:
-                    label, confidence = predict_with_interval(features, scaler, model, le, interval=0.1, cache=predict_cache)
+                    label, confidence = predict_with_interval(features, scaler, model, le, interval=0.1,cache=predict_cache)
 
                     # ㅅ/ㅠ를 인식했을 경우
-                    if label in ['ㅅ', 'ㅠ']:
+                    if (label == 'ㅅ' or label == 'ㅠ') and distinguished_SiotYu == '':
 
-                        # 이전 프레임에서 판별된 ㅅ/ㅠ가 있을 경우 : 해당 문자 반환(매 프레임마다 판별을 방지하기 위함)
-                        if distinguished_SiotYu in ['ㅅ', 'ㅠ']:
-                            label = distinguished_SiotYu
-
-                        # 첫 입력이거나 이전 입력이 중성일 경우 : 'ㅅ' 입력
-                        elif not label_compose_check_list or is_full_jungseong(label_compose_check_list[-1]):
+                        # 첫 입력일 경우
+                        if not label_compose_check_list and not final_inputed_labels:
                             distinguished_SiotYu = label = 'ㅅ'
 
-                        # ㅅ이 아닌 초성(초/중/종)이 입력된 상태일 경우 : 'ㅠ' 입력
-                        elif not inputed_moum and label_compose_check_list[-1] != 'ㅅ':
-                            distinguished_SiotYu = label = 'ㅠ'
-
-                        # 모두 불충족할 경우 : LSTM 모델 실행
                         else:
                             distinguished_SiotYu = label = distinguish_SiotYu(inputed_jamo_list)
+
+                    # 이전 프레임에서 판별된 ㅅ/ㅠ가 있을 경우
+                    elif distinguished_SiotYu in ['ㅅ', 'ㅠ']:
+                        label = distinguished_SiotYu
 
                     # 시간 측정
                     current_time = time.time()
@@ -394,8 +390,8 @@ while cap.isOpened():
                         if portion >= 0.8:
                             # 가장 최근 confidence로 판단
                             latest_conf = [c for l, c in recent if l == pred_label][-1]
-                            if latest_conf >= 0.8 and current_time - last_added_time > 1.0:\
-                                # 조합 시작
+                            if latest_conf >= 0.8 and current_time - last_added_time > 1.0: \
+                                    # 조합 시작
 
                                 # 자음 입력
                                 if is_jaum(pred_label):
@@ -408,9 +404,11 @@ while cap.isOpened():
                                     elif (
                                             label_compose_check_list
                                             and not inputed_moum
-                                            and get_double_choseong(label_compose_check_list[-1], pred_label) is not None # 초성 된소리 판별 합격
+                                            and get_double_choseong(label_compose_check_list[-1],
+                                                                    pred_label) is not None  # 초성 된소리 판별 합격
                                     ):
-                                        label_compose_check_list[-1] = get_double_choseong(label_compose_check_list[-1], pred_label)
+                                        label_compose_check_list[-1] = get_double_choseong(label_compose_check_list[-1],
+                                                                                           pred_label)
                                         reset_jamo_input(pred_label)
 
                                     # 초성(자음 입력, 입력된 모음X) : 된소리(쌍자음) 판별 불합 (ㄱ + ㄴ)
@@ -435,8 +433,10 @@ while cap.isOpened():
                                         elif is_jaum(label_compose_check_list[-1]):
 
                                             # 겹받침 판별 합격
-                                            if get_double_jongseong(label_compose_check_list[-1], pred_label) is not None:
-                                                label_compose_check_list[-1] = get_double_jongseong(label_compose_check_list[-1], pred_label)
+                                            if get_double_jongseong(label_compose_check_list[-1],
+                                                                    pred_label) is not None:
+                                                label_compose_check_list[-1] = get_double_jongseong(
+                                                    label_compose_check_list[-1], pred_label)
                                                 reset_jamo_input(pred_label)
 
                                             # 겹받침 판별 불합
@@ -477,21 +477,23 @@ while cap.isOpened():
                                                 inputed_moum = True
                                                 reset_jamo_input(pred_label)
 
-
                                             # 마지막 입력 : 모음
                                             elif is_jaum(label_compose_check_list[-1]) is False:
 
                                                 # 겹모음 판별 : 합격
-                                                if get_double_jungseong(label_compose_check_list[-1], pred_label) is not None:
-                                                    label_compose_check_list[-1] = get_double_jungseong(label_compose_check_list[-1], pred_label)
+                                                if get_double_jungseong(label_compose_check_list[-1],
+                                                                        pred_label) is not None:
+                                                    label_compose_check_list[-1] = get_double_jungseong(
+                                                        label_compose_check_list[-1], pred_label)
                                                     reset_jamo_input(pred_label)
 
                                                 # 겹모음 판별 : 불합
-                                                elif get_double_jungseong(label_compose_check_list[-1], pred_label) is None:
+                                                elif get_double_jungseong(label_compose_check_list[-1],
+                                                                          pred_label) is None:
                                                     compose_hangul(label_compose_check_list)
                                                     input_label(pred_label) # 모음 단일 추가
                                                     reset_jamo_input(pred_label)
-                                            
+
                                             # 마지막 입력 : 겹받침
                                             elif is_full_jongseong(label_compose_check_list[-1]):
                                                 label_compose_check_list[-1], choseong = decompose_double_jaum(label_compose_check_list[-1])
@@ -500,9 +502,6 @@ while cap.isOpened():
                                                 inputed_moum = True
                                                 reset_jamo_input(pred_label)
 
-                                else: # is_jaum(pred_label) is None
-                                    input_label(pred_label)
-                                                    
                     mp_drawing.draw_landmarks(frame, hand_landmarks, mp_hands.HAND_CONNECTIONS)
                     text = f"{label} ({confidence:.2f})"
                     frame = draw_text_with_pil(frame, text, (10, 30))
@@ -511,11 +510,12 @@ while cap.isOpened():
             len(label_compose_check_list) >= 2 and
             is_full_choseong(label_compose_check_list[0]) and
             is_full_jungseong(label_compose_check_list[1]) and
-            (len(label_compose_check_list) == 2 or (len(label_compose_check_list) == 3 and is_full_jongseong(label_compose_check_list[2])))
+            (len(label_compose_check_list) == 2 or (
+                    len(label_compose_check_list) == 3 and is_full_jongseong(label_compose_check_list[2])))
     ):
-        frame = draw_text_with_pil(frame, final_inputed_labels + hgtk.letter.compose(*label_compose_check_list), (10, 80), color=(255, 255, 0))
+        frame = draw_text_with_pil(frame, final_inputed_labels + hgtk.letter.compose(*label_compose_check_list), (10, 80), color=(255, 255, 0))  # 완성 문자 출력
     else:
-        frame = draw_text_with_pil(frame, final_inputed_labels + "".join(label_compose_check_list), (10, 80), color=(255, 255, 0))
+        frame = draw_text_with_pil(frame, final_inputed_labels + "".join(label_compose_check_list), (10, 80), color=(255, 255, 0))  # 완성 문자 출력
 
     cv2.imshow("🖐 실시간 손 모양 인식 (1: 한글 / 2: 숫자 / ESC: 종료)", frame)
 
