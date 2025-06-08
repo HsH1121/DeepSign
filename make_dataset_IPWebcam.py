@@ -36,14 +36,8 @@ last_saved_time = 0 # 마지막 저장 시간
 padding = 80
 
 while True:
-
-    # ====== iPWebcam 프레임 동기화용 코드 ======
-    for _ in range(5):
-        cap.grab()
-
-    ret, frame = cap.retrieve()
+    ret, frame = cap.read()
     if not ret:
-        print("❌ 프레임을 불러올 수 없습니다.")
         break
 
     h, w, _ = frame.shape

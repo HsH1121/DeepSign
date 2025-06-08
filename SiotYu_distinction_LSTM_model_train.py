@@ -107,6 +107,7 @@ def decompose_sentence_to_jamo_sequence(sentence):
                 continue
     return result
 
+
 # 전체 시퀀스와 타깃 구성
 X_data, y_data = [], []
 
