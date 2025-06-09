@@ -12,7 +12,7 @@ from sklearn.metrics import accuracy_score
 import joblib
 import pandas as pd
 # 1. 데이터 로드
-df = pd.read_csv('hangul_feature_2.csv', encoding = "cp949")
+df = pd.read_csv('hangul_feature.csv', encoding = "cp949")
 print(df['label'].value_counts())
 
 # 2. 특징/레이블 분리
@@ -60,7 +60,7 @@ model.compile(optimizer='nadam',
               metrics=['accuracy'])
 
 # 7. 학습
-model.fit(X_train, y_train, epochs=25, batch_size=64,
+model.fit(X_train, y_train, epochs=30, batch_size=64,
           validation_data=(X_val, y_val))
 
 # 8. 레이블당 정확도

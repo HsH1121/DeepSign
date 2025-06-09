@@ -70,14 +70,10 @@ def extract_features(row):
     for wrist, p1, p2, p3, p4 in finger_joints:
         angles = angle_finger_joint(coords[wrist], coords[p1], coords[p2], coords[p3], coords[p4])
         features.extend(angles)
-
-    '''
-    # 손가락 간 각도
-    angle_pairs = [(4,8), (8,12), (12,16), (16,20)]
-    for i, j in angle_pairs:
-        features.append(angle_between(coords[0], coords[i], coords[j]))
-    '''
-
+    
+    # 4-0-8번 관절 각도
+    features.append(angle_between(coords[4], coords[0], coords[8]))
+    
     # 손가락 간 거리 (15 ~ 18열)
     distances = []
     hand_size = get_hand_size(coords)
@@ -99,10 +95,10 @@ def extract_features(row):
     return pd.Series(features)
 
 # CSV 로딩
-df = pd.read_csv("hangul_2.csv", encoding="cp949")
+df = pd.read_csv("hangul.csv", encoding="cp949")
 feature_df = df.drop(columns=['label']).apply(extract_features, axis=1)
 feature_df['label'] = df['label']
 
 # 저장
-feature_df.to_csv("hangul_feature_2.csv", index=False, encoding="cp949")
+feature_df.to_csv("hangul_feature.csv", index=False, encoding="cp949")
 print("[✓] feature-data 저장 완료.")

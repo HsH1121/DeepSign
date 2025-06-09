@@ -6,8 +6,8 @@ import csv
 
 # 폴더 경로 설정
 dataset_dir = 'dataset_raw'  # 저장된 이미지 폴더
-digits_csv_path = 'digits_2.csv'
-hangul_csv_path = 'hangul_2.csv'
+digits_csv_path = 'digits.csv'
+hangul_csv_path = 'hangul.csv'
 
 # MediaPipe Hands 초기화
 mp_hands = mp.solutions.hands
@@ -15,10 +15,10 @@ hands = mp_hands.Hands(static_image_mode=True, max_num_hands=1)
 mp_drawing = mp.solutions.drawing_utils
 
 # 숫자 / 자모 분류 기준
-digits_labels = {str(i) for i in range(1, 11)} | {'conversion_model_1', 'space', 'back_space'}
+digits_labels = {str(i) for i in range(1, 11)}
 jaum_labels = {'ㄱ','ㄴ','ㄷ','ㄹ','ㅁ','ㅂ','ㅅ','ㅇ','ㅈ','ㅊ','ㅋ','ㅌ','ㅍ','ㅎ', 'conversion_model_1', 'space', 'back_space'}
 moum_labels = {'ㅏ','ㅐ','ㅑ','ㅒ','ㅓ','ㅔ','ㅕ','ㅖ','ㅗ','ㅘ','ㅙ','ㅚ',
-               'ㅛ','ㅜ','ㅝ','ㅞ','ㅟ','ㅡ','ㅢ','ㅣ'}
+               'ㅛ','ㅜ','ㅝ','ㅞ','ㅟ','ㅡ','ㅢ','ㅣ', 'conversion_model_1', 'space', 'back_space'} # ㅠ 제외
 hangul_labels = jaum_labels | moum_labels
 
 # CSV 파일 준비
