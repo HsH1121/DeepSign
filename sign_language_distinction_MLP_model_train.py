@@ -12,7 +12,7 @@ from sklearn.metrics import accuracy_score
 import joblib
 import pandas as pd
 # 1. 데이터 로드
-df = pd.read_csv('hangul_feature.csv', encoding = "cp949")
+df = pd.read_csv('digit_feature.csv', encoding = "cp949")
 print(df['label'].value_counts())
 
 # 2. 특징/레이블 분리
@@ -78,6 +78,6 @@ for label in unique_labels:
     print(f"[{label_name}] 정확도: {acc * 100:.2f}%")
 
 # 9. 저장
-model.save('model_hangul.h5')
-joblib.dump(le, "label_encoder_hangul.pkl")
-joblib.dump(scaler, "scaler_hangul.pkl")
+model.save('model_digit.h5')
+joblib.dump(le, "label_encoder_digit.pkl")
+joblib.dump(scaler, "scaler_digit.pkl")

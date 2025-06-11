@@ -95,10 +95,10 @@ def extract_features(row):
     return pd.Series(features)
 
 # CSV 로딩
-df = pd.read_csv("hangul.csv", encoding="cp949")
+df = pd.read_csv("digits.csv", encoding="cp949")
 feature_df = df.drop(columns=['label']).apply(extract_features, axis=1)
 feature_df['label'] = df['label']
 
 # 저장
-feature_df.to_csv("hangul_feature.csv", index=False, encoding="cp949")
+feature_df.to_csv("digit_feature.csv", index=False, encoding="cp949")
 print("[✓] feature-data 저장 완료.")

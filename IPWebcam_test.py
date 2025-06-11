@@ -11,7 +11,7 @@ import hgtk
 
 # ====== 폰트 설정 ======
 font_path = "NanumGothic.ttf"
-font = ImageFont.truetype(font_path, 40)
+font = ImageFont.truetype(font_path, 25)
 
 # LSTM 모델용 자모 리스트와 인덱스 매핑
 jaum_list = list("ㄱㄴㄷㄹㅁㅂㅅㅇㅈㅊㅋㅌㅍㅎ")
@@ -320,12 +320,12 @@ last_added_time = 0
 label_compose_check_list = []
 inputed_moum = False
 last_input = ""
+input_mode = "한글"
 
 distinguished_SiotYu = ''  # 매 프레임마다 판별 모델 호출을 방지하기 위한 값(판별 시 ㅅ/ㅠ 입력)
 
 # ====== 실시간 웹캠 ======
-ip_webcam_url = ("http://192.168.219.117:8080/video")
-cap = cv2.VideoCapture(ip_webcam_url)
+cap = cv2.VideoCapture("http://192.168.219.103:8080/video")
 
 predict_cache = {}
 
@@ -408,10 +408,12 @@ while cap.isOpened():
                                         if current_model_key == "hangul":
                                             model, scaler, le = load_model_set("digit")
                                             current_model_key = "digit"
+                                            input_mode = "숫자"
                                             print("🔁 [자동전환] 숫자 모델로 전환됨.")
                                         else:
                                             model, scaler, le = load_model_set("hangul")
                                             current_model_key = "hangul"
+                                            input_mode = "한글"
                                             print("🔁 [자동전환] 한글 모델로 전환됨.")
 
                                 # 자음 입력
@@ -487,7 +489,10 @@ while cap.isOpened():
 
                     mp_drawing.draw_landmarks(frame, hand_landmarks, mp_hands.HAND_CONNECTIONS)
                     text = f"{label} ({confidence:.2f})"
-                    frame = draw_text_with_pil(frame, text, (10, 30))
+
+                    frame = draw_text_with_pil(frame, text, (10, 80))
+
+    frame = draw_text_with_pil(frame, "입력모드 : " + input_mode, (10, 30))
 
     if (
             len(label_compose_check_list) >= 2 and
@@ -496,11 +501,11 @@ while cap.isOpened():
             (len(label_compose_check_list) == 2 or (
                     len(label_compose_check_list) == 3 and is_full_jongseong(label_compose_check_list[2])))
     ):
-        frame = draw_text_with_pil(frame, final_inputed_labels + hgtk.letter.compose(*label_compose_check_list), (10, 80), color=(0, 0, 0))  # 완성 문자 출력
+        frame = draw_text_with_pil(frame, final_inputed_labels + hgtk.letter.compose(*label_compose_check_list), (10, 130), color=(255, 0, 0))  # 완성 문자 출력
     else:
-        frame = draw_text_with_pil(frame, final_inputed_labels + "".join(label_compose_check_list), (10, 80), color=(0, 0, 0))  # 완성 문자 출력
+        frame = draw_text_with_pil(frame, final_inputed_labels + "".join(label_compose_check_list), (10, 130), color=(255, 0, 0))  # 완성 문자 출력
 
-    cv2.imshow("🖐 실시간 손 모양 인식 (1: 한글 / 2: 숫자 / ESC: 종료)", frame)
+    cv2.imshow("Sign language detection", frame)
 
     key = cv2.waitKey(1) & 0xFF
     if key == 27:  # ESC
