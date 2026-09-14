@@ -1,0 +1,26 @@
+# 데이터셋 — 저장소에 포함하지 않고 GitHub Release로 배포
+# 원본 손 이미지 (약 1.4GB, 33,000여 장)
+dataset_raw/
+# 손 좌표 / 특징 CSV
+*.csv
+# Release 업로드용 압축 파일
+release/
+
+# IDE
+.idea/
+.vscode/
+
+# Python
+__pycache__/
+*.py[cod]
+.ipynb_checkpoints/
+
+# 가상환경
+venv/
+.venv/
+env/
+
+# OS
+Thumbs.db
+Desktop.ini
+.DS_Store

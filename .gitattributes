@@ -1,0 +1,8 @@
+# CSV는 cp949 인코딩이므로 줄바꿈 변환 없이 원본 그대로 저장
+*.csv -text
+
+# 모델, 인코더/스케일러, 폰트는 바이너리
+*.h5  binary
+*.pkl binary
+*.ttf binary
+*.jpg binary
