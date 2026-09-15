@@ -71,6 +71,23 @@ python IPWebcam_test.py
 | [`dataset_raw.zip`](https://github.com/HsH1121/DeepSign/releases/download/dataset-v1/dataset_raw.zip) | 라벨별 손 이미지 (약 1.4GB) | `dataset_raw/<라벨>/*.jpg` |
 | [`csv_data.zip`](https://github.com/HsH1121/DeepSign/releases/download/dataset-v1/csv_data.zip) | 손 좌표와 특징 CSV | 루트의 `*.csv`, `non_conversion/*.csv` |
 
+### 이전 버전
+
+커밋 기록은 개발 과정의 폴더(`hangul_test` ~ `hangul_test_8`)를 버전 순서대로 담고 있습니다. 각 버전 커밋에는 같은 이름의 태그가 있고, 그 태그의 Release에 해당 버전에서 쓴 CSV(`csv_data.zip`)가 첨부되어 있습니다.
+
+| 버전 | 코드 | CSV |
+| --- | --- | --- |
+| hangul_test | [태그](https://github.com/HsH1121/DeepSign/tree/hangul_test) | [Release](https://github.com/HsH1121/DeepSign/releases/tag/hangul_test) |
+| hangul_test_2 | [태그](https://github.com/HsH1121/DeepSign/tree/hangul_test_2) | [Release](https://github.com/HsH1121/DeepSign/releases/tag/hangul_test_2) |
+| hangul_test_3 | [태그](https://github.com/HsH1121/DeepSign/tree/hangul_test_3) | [Release](https://github.com/HsH1121/DeepSign/releases/tag/hangul_test_3) |
+| hangul_test_4 | [태그](https://github.com/HsH1121/DeepSign/tree/hangul_test_4) | [Release](https://github.com/HsH1121/DeepSign/releases/tag/hangul_test_4) |
+| hangul_test_5 | [태그](https://github.com/HsH1121/DeepSign/tree/hangul_test_5) | [Release](https://github.com/HsH1121/DeepSign/releases/tag/hangul_test_5) |
+| hangul_test_6 | [태그](https://github.com/HsH1121/DeepSign/tree/hangul_test_6) | [Release](https://github.com/HsH1121/DeepSign/releases/tag/hangul_test_6) |
+| hangul_test_7 | [태그](https://github.com/HsH1121/DeepSign/tree/hangul_test_7) | [Release](https://github.com/HsH1121/DeepSign/releases/tag/hangul_test_7) |
+| hangul_test_8 | [태그](https://github.com/HsH1121/DeepSign/tree/hangul_test_8) | [Release](https://github.com/HsH1121/DeepSign/releases/tag/hangul_test_8) |
+
+> 손 이미지는 버전 간 차이가 작아 최신본(`dataset-v1`의 `dataset_raw.zip`)만 제공합니다.
+
 ### 직접 만들기
 
 사진부터 새로 모으거나, 받은 사진으로 CSV와 모델을 다시 만들려면 다음 순서로 실행합니다.
