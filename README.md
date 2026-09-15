@@ -73,18 +73,20 @@ python IPWebcam_test.py
 
 ### 이전 버전
 
-커밋 기록은 개발 과정의 폴더(`hangul_test` ~ `hangul_test_8`)를 버전 순서대로 담고 있습니다. 각 버전 커밋에는 같은 이름의 태그가 있고, 그 태그의 Release에 해당 버전에서 쓴 CSV(`csv_data.zip`)가 첨부되어 있습니다.
+커밋 기록은 개발 과정의 폴더(`DLP_Project_Original`, `DLP_Project`, `hangul_test` ~ `hangul_test_8`)를 버전 순서대로 담고 있습니다. 각 버전 커밋에는 같은 이름의 태그가 있고, 그 태그의 Release에 해당 버전에서 쓴 CSV(`csv_data.zip`)가 첨부되어 있습니다.
 
-| 버전 | 코드 | CSV |
-| --- | --- | --- |
-| hangul_test | [태그](https://github.com/HsH1121/DeepSign/tree/hangul_test) | [Release](https://github.com/HsH1121/DeepSign/releases/tag/hangul_test) |
-| hangul_test_2 | [태그](https://github.com/HsH1121/DeepSign/tree/hangul_test_2) | [Release](https://github.com/HsH1121/DeepSign/releases/tag/hangul_test_2) |
-| hangul_test_3 | [태그](https://github.com/HsH1121/DeepSign/tree/hangul_test_3) | [Release](https://github.com/HsH1121/DeepSign/releases/tag/hangul_test_3) |
-| hangul_test_4 | [태그](https://github.com/HsH1121/DeepSign/tree/hangul_test_4) | [Release](https://github.com/HsH1121/DeepSign/releases/tag/hangul_test_4) |
-| hangul_test_5 | [태그](https://github.com/HsH1121/DeepSign/tree/hangul_test_5) | [Release](https://github.com/HsH1121/DeepSign/releases/tag/hangul_test_5) |
-| hangul_test_6 | [태그](https://github.com/HsH1121/DeepSign/tree/hangul_test_6) | [Release](https://github.com/HsH1121/DeepSign/releases/tag/hangul_test_6) |
-| hangul_test_7 | [태그](https://github.com/HsH1121/DeepSign/tree/hangul_test_7) | [Release](https://github.com/HsH1121/DeepSign/releases/tag/hangul_test_7) |
-| hangul_test_8 | [태그](https://github.com/HsH1121/DeepSign/tree/hangul_test_8) | [Release](https://github.com/HsH1121/DeepSign/releases/tag/hangul_test_8) |
+| 버전 | 내용 | 코드 | CSV |
+| --- | --- | --- | --- |
+| DLP_Project_Original | 숫자 1~10으로 좌표 MLP·LSTM·Conv1D·특징 MLP·EfficientNet·Residual MLP 비교 | [태그](https://github.com/HsH1121/DeepSign/tree/DLP_Project_Original) | [Release](https://github.com/HsH1121/DeepSign/releases/tag/DLP_Project_Original) |
+| DLP_Project | 한글 자모까지 41클래스로 확장, IP Webcam 실시간 테스트 | [태그](https://github.com/HsH1121/DeepSign/tree/DLP_Project) | [Release](https://github.com/HsH1121/DeepSign/releases/tag/DLP_Project) |
+| hangul_test | 손 크기 정규화·0~2π 각도로 특징 재설계, 41클래스 MLP | [태그](https://github.com/HsH1121/DeepSign/tree/hangul_test) | [Release](https://github.com/HsH1121/DeepSign/releases/tag/hangul_test) |
+| hangul_test_2 | 자음/모음/숫자 모델 분리 실험 | [태그](https://github.com/HsH1121/DeepSign/tree/hangul_test_2) | [Release](https://github.com/HsH1121/DeepSign/releases/tag/hangul_test_2) |
+| hangul_test_3 | 실시간 입력 로직(1초 다수결, 한글 조합) 추가 | [태그](https://github.com/HsH1121/DeepSign/tree/hangul_test_3) | [Release](https://github.com/HsH1121/DeepSign/releases/tag/hangul_test_3) |
+| hangul_test_4 | ㅅ/ㅠ 구분 LSTM, 한글↔숫자 전환 손동작 | [태그](https://github.com/HsH1121/DeepSign/tree/hangul_test_4) | [Release](https://github.com/HsH1121/DeepSign/releases/tag/hangul_test_4) |
+| hangul_test_5 | space/back_space 손동작, 22차원 특징 | [태그](https://github.com/HsH1121/DeepSign/tree/hangul_test_5) | [Release](https://github.com/HsH1121/DeepSign/releases/tag/hangul_test_5) |
+| hangul_test_6 | space 제외 모델 비교, 자모 조합 모듈 분리 시도 | [태그](https://github.com/HsH1121/DeepSign/tree/hangul_test_6) | [Release](https://github.com/HsH1121/DeepSign/releases/tag/hangul_test_6) |
+| hangul_test_7 | 스크립트 이름 통일, 실험 파일 정리 | [태그](https://github.com/HsH1121/DeepSign/tree/hangul_test_7) | [Release](https://github.com/HsH1121/DeepSign/releases/tag/hangul_test_7) |
+| hangul_test_8 | 숫자 전용 좌표 추출, 최종 재학습 | [태그](https://github.com/HsH1121/DeepSign/tree/hangul_test_8) | [Release](https://github.com/HsH1121/DeepSign/releases/tag/hangul_test_8) |
 
 > 손 이미지는 버전 간 차이가 작아 최신본(`dataset-v1`의 `dataset_raw.zip`)만 제공합니다.
 
