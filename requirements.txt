@@ -1,9 +1,17 @@
-tensorflow
-mediapipe
-opencv-python
-numpy
-pandas
-scikit-learn
-joblib
-pillow
-hgtk
+# Python 3.10 기준
+# 모델 파일(.h5)이 Keras 2.10.0으로 저장되어 있어 TensorFlow 2.10 버전대가 필요함
+tensorflow==2.10.1
+keras==2.10.0
+# TensorFlow 2.10은 protobuf<3.20, MediaPipe 0.10.5는 protobuf<4를 요구
+protobuf==3.19.6
+mediapipe==0.10.5
+# MediaPipe가 opencv-contrib-python에 의존하므로 opencv-python 대신 사용
+opencv-contrib-python==4.11.0.86
+numpy==1.23.5
+h5py==3.13.0
+# scaler_*.pkl, label_encoder_*.pkl이 scikit-learn 1.3.0으로 저장되어 있음
+scikit-learn==1.3.0
+joblib==1.3.2
+pandas==2.0.3
+pillow==11.2.1
+hgtk==0.2.1

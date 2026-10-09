@@ -26,11 +26,19 @@ MediaPipe로 손 관절 좌표를 추출하고, MLP 모델로 한글 자음·모
 
 ## 설치
 
+개발 환경: Windows 11, **Python 3.10** (3.10.16에서 개발)
+
 ```bash
+conda create -n deepsign python=3.10
+conda activate deepsign
 pip install -r requirements.txt
 ```
 
-> MediaPipe의 `mp.solutions.hands` API를 사용합니다. 이 API를 지원하는 MediaPipe 버전을 설치해야 합니다.
+- `requirements.txt`의 버전은 고정해 두었습니다. 최신 버전을 설치하면 실행되지 않을 수 있습니다.
+  - 모델 파일(`.h5`)이 Keras 2.10.0으로 저장되어 있어 **TensorFlow 2.10.1**이 필요합니다. TensorFlow 2.10은 Python 3.7~3.10만 지원합니다.
+  - `scaler_*.pkl`, `label_encoder_*.pkl`은 **scikit-learn 1.3.0**으로 저장되어 있습니다.
+  - `mp.solutions.hands` API를 쓰기 때문에 **MediaPipe 0.10.5**를 사용합니다.
+- GPU를 쓰려면 **CUDA 11.2**와 **cuDNN 8.1**을 설치하세요. TensorFlow 2.10은 Windows에서 GPU를 직접 지원하는 마지막 버전입니다. GPU가 없으면 CPU로 실행됩니다.
 
 ## 실행
 
