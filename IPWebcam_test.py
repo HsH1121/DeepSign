@@ -393,10 +393,18 @@ while cap.isOpened():
 
                                     elif pred_label == "back_space":
                                         if label_compose_check_list:
-                                            if len(label_compose_check_list) == 2:
-                                                inputed_moum = False
-                                            del label_compose_check_list[-1]
-                                            print("🔙 [Backspace] 초성 지우기")
+                                            last = label_compose_check_list[-1]
+                                            parts = decompose_double_moum(last) if is_jaum(last) is False else decompose_double_jaum(last)
+                                            # 겹자모 -> 앞 자모만 남김
+                                            if len(parts) == 2:
+                                                label_compose_check_list[-1] = parts[0]
+                                                print("🔙 [Backspace] 겹자모 분해")
+                                            # 홑자모 -> 통째로 삭제
+                                            else:
+                                                if len(label_compose_check_list) == 2:
+                                                    inputed_moum = False
+                                                del label_compose_check_list[-1]
+                                                print("🔙 [Backspace] 자모 지우기")
                                         elif final_inputed_labels:
                                             final_inputed_labels = final_inputed_labels[:-1]
                                             print("🔙 [Backspace] 문자열 삭제")
