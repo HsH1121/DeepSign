@@ -23,7 +23,7 @@ index_to_char = {idx: char for char, idx in char_to_index.items()}
 VOCAB_SIZE = len(char_to_index)
 max_len = 20  # 학습 시 사용한 max_len과 동일하게 설정해야 함
 
-lstm_model = load_model("SiotYu_distinction.h5")
+lstm_model = load_model("SiotYu_distinction_2.h5")
 
 # ====== 모델 로드 함수 ======
 def load_model_set(key):
@@ -287,6 +287,20 @@ def reset_input():
     last_added_time = time.time()
     distinguished_SiotYu = '' # 판별된 ㅅ/ㅠ 초기화
 
+# ====== LSTM 입력용 자모 시퀀스 생성 함수 ======
+def to_jamo_sequence(chars):
+    # 완성형 글자·단독 자모를 기본 자모로 분해 (학습 스크립트와 같은 방식)
+    jamo_seq = []
+    for char in chars:
+        try:
+            parts = hgtk.letter.decompose(char)
+        except hgtk.exception.NotHangulException:
+            continue # 숫자, 공백 등은 제외
+        for part in parts:
+            if part:
+                jamo_seq.extend(decompose_double_moum(part) if is_jaum(part) is False else decompose_double_jaum(part))
+    return jamo_seq
+
 # ====== ㅅ/ㅠ 판별 함수
 def distinguish_SiotYu(input_jamo_list):
     # 유효한 자모만 필터링
@@ -360,11 +374,12 @@ while cap.isOpened():
                         # 조합 리스트 : ㅅ
                         elif not label_compose_check_list:
                             distinguished_SiotYu = label = 'ㅅ'
-                        # 둘 다 아닐 경우 : LSTM 모델 실행
+                        # 조합 리스트에 초성(ㅅ 제외)만 있음 : ㅠ (ㅅ은 ㅅ + ㅅ = ㅆ 쌍초성이 가능하므로 LSTM으로 판별)
+                        elif len(label_compose_check_list) == 1 and label_compose_check_list[0] != 'ㅅ':
+                            distinguished_SiotYu = label = 'ㅠ'
+                        # 모두 아닐 경우 : LSTM 모델 실행
                         else:
-                            context_jamo = list(final_inputed_labels.replace(" ", ""))
-                            if label_compose_check_list:
-                                context_jamo += label_compose_check_list
+                            context_jamo = to_jamo_sequence(list(final_inputed_labels) + label_compose_check_list)
                             distinguished_SiotYu = label = distinguish_SiotYu(context_jamo)
 
                     # 시간 측정
