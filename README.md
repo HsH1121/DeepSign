@@ -1,55 +1,79 @@
-# 실시간 한글 지문자(수어) 인식
+# 실시간 한글 수어(지숫자·지문자) 인식 모델
 
-MediaPipe로 손 관절 좌표를 추출하고, MLP 모델로 한글 자음·모음과 숫자 지문자를 실시간으로 인식해 글자로 조합하는 프로젝트입니다.
-모양이 비슷한 `ㅅ`/`ㅠ`는 앞뒤 문맥을 보는 LSTM 모델로 한 번 더 구분합니다.
-
-## 담당 작업
-
-| 작업 | 내용 | 버전 |
-| --- | --- | --- |
-| 한글 데이터셋 추가 | 숫자 지문자 모델에 한글 자음·모음을 더해 41클래스로 확장, IP Webcam 데이터 수집 | DLP_Project |
-| 손가락 방향·접힘 인식 개선 | 손가락마다 손목부터 손끝까지 마디 각도 3개를 쓰도록 특징을 바꾸고, 엄지-손목-검지(4-0-8) 각도를 추가해 손가락이 화면 쪽을 향하거나 완전히 접은 채 손바닥을 보여줄 때도 인식되도록 함 | DLP_Project, hangul_test_5 |
-| 손바닥/손등 구별 | 기존에는 관절이 어느 쪽으로 굽든 0~180°로 같게 계산돼 손바닥 쪽 V와 손등 쪽 V를 구별하지 못함. 2D 외적 부호로 굽은 방향을 반영해 0~360°로 계산하도록 바꿈 | hangul_test |
-| 거리 변화 대응 | 손가락 사이 거리를 손 크기(관절 좌표 범위의 대각선)로 나눠, 카메라와의 거리가 달라져도 인식되도록 함 | hangul_test |
-| 한글 자모 조합기 | `hgtk`를 활용한 실시간 조합 알고리즘 구현: 1초 다수결 입력 판정, 초성·중성·종성 조합, 쌍자음·겹모음·겹받침 처리, 종성을 다음 글자 초성으로 넘기기 | hangul_test_3 |
-| 실시간 처리 최적화 | MLP 예측을 0.1초 간격으로 캐시, 오래된 IP Webcam 프레임 건너뛰기, 손 1개만 검출, `ㅅ`/`ㅠ` 판별 결과 재사용 | hangul_test_3 |
-| `ㅅ`/`ㅠ` 구별 LSTM | 이전에 입력된 자모 시퀀스로 다음 자모를 예측해 모양이 비슷한 `ㅅ`/`ㅠ`를 구별 | hangul_test_4, hangul_test_5 |
+MediaPipe로 손 관절 좌표를 추출하고,  MLP 모델로 한글 자음·모음과 숫자 지문자를 실시간으로 인식해 글자로 조합하는 프로젝트입니다.
 
 ## 동작 방식
 
-1. 스마트폰 **IP Webcam** 앱으로 받은 영상에서 MediaPipe Hands가 손 관절 21개의 좌표를 찾습니다.
-2. 좌표로 특징 21개를 계산합니다. 손가락 마디 각도, 손가락 끝 사이 거리(손 크기로 정규화), 거리 비율, 손 회전 각도입니다.
-3. MLP 모델이 자모나 숫자를 분류합니다.
-4. 최근 1초 동안 같은 결과가 80% 이상이고 신뢰도도 0.8 이상이면 입력으로 받아들입니다.
+1. 스마트폰 IP Webcam 앱으로 받은 영상에서 MediaPipe Hands가 손 관절 21개의 좌표를 찾습니다.
+2. 찾은 관절 좌표를 기반으로 특징 22개를 계산 및 추출합니다. [손가락 마디 각도(15), 엄지-손목-검지(4-0-8) 각도(1), 손가락 끝 사이 거리(손 크기로 정규화, 4), 거리 비율(1), 손 회전 각도(1)]
+3. MLP 모델이 문자를 분류합니다.
+4. 최근 1초 동안 같은 결과가 정확도 80% 이상으로 유지되면 입력으로 받아들입니다.
 5. `hgtk`를 활용한 실시간 조합 알고리즘으로 입력된 자모를 완성형 한글로 만듭니다. 쌍자음, 겹모음, 겹받침도 처리합니다.
 6. `space`, `back_space`, `conversion_model_1`(한글↔숫자 전환) 동작은 특수 입력으로 처리합니다.
 
-## 설치
+## 실시간 한글 자모 조합기
 
-개발 환경: Windows 11, **Python 3.10** (3.10.16에서 개발)
+### 직접 구현한 이유
+`hgtk`는 자모를 **한꺼번에** 넣어야 조합되지만 프로젝트에서는 자모가 1초 이상의 간격으로 **하나씩** 들어오기 때문에,
+`ㄱ`이 입력된 뒤 `ㅏ`가 들어오면 `가`가 아니라 `ㄱㅏ`로 출력되는 문제가 있었습니다.
+그래서 조합 중인 글자의 상태를 유지하며 자모가 들어올 때마다 실시간으로 조합하는 로직을 직접 구현했습니다.
+`hgtk`는 배치가 끝난 초·중·종성을 완성형 음절로 바꾸는 데에만 사용합니다.
 
-```bash
-conda create -n deepsign python=3.10
-conda activate deepsign
-pip install -r requirements.txt
-```
+### 상태별 처리
 
-- `requirements.txt`의 버전은 고정해 두었습니다. 최신 버전을 설치하면 실행되지 않을 수 있습니다.
-  - 모델 파일(`.h5`)이 Keras 2.10.0으로 저장되어 있어 **TensorFlow 2.10.1**이 필요합니다. TensorFlow 2.10은 Python 3.7~3.10만 지원합니다.
-  - `scaler_*.pkl`, `label_encoder_*.pkl`은 **scikit-learn 1.3.0**으로 저장되어 있습니다.
-  - `mp.solutions.hands` API를 쓰기 때문에 **MediaPipe 0.10.5**를 사용합니다.
-- GPU를 쓰려면 **CUDA 11.2**와 **cuDNN 8.1**을 설치하세요. TensorFlow 2.10은 Windows에서 GPU를 직접 지원하는 마지막 버전입니다. GPU가 없으면 CPU로 실행됩니다.
+| 현재 상태 | 자음 입력 | 모음 입력 |
+| --- | --- | --- |
+| 비어 있음 | 초성으로 시작 | 모음 단독 입력 |
+| 초성 | 같은 자음이면 쌍초성(`ㄱ`+`ㄱ`→`ㄲ`), 아니면 앞 자음 확정 후 새 초성 | 중성으로 추가 |
+| 초성+중성 | 종성으로 추가 | 겹모음 가능하면 결합(`ㅗ`+`ㅏ`→`ㅘ`), 아니면 앞 글자 확정 |
+| 초성+중성+종성 | 겹받침 가능하면 결합(`ㄹ`+`ㄱ`→`ㄺ`), 아니면 앞 글자 확정 후 새 초성 | 홑받침은 다음 글자 초성으로 이동, 겹받침은 분해해 뒤 자음만 이동 |
 
-## 실행
+- `back_space`: 겹자모는 한 단계만 분해(`ㅘ`→`ㅗ`, `ㄺ`→`ㄹ`), 홑자모는 삭제, 조합 중인 글자가 없으면 완성된 글자 삭제
 
-### 실시간 인식
+### 예시: `ㄷ` `ㅏ` `ㄹ` `ㄱ` `ㅑ` `ㄹ` → 달걀
 
-```bash
-python IPWebcam_test.py
-```
+| 입력 | 조합 중 | 확정된 글자 |
+| --- | --- | --- |
+| `ㄷ` | ㄷ | |
+| `ㅏ` | 다 | |
+| `ㄹ` | 달 | |
+| `ㄱ` | 닭 (겹받침 `ㄺ`) | |
+| `ㅑ` | 갸 | 달 (`ㄺ`을 분해해 `ㄱ`을 다음 글자 초성으로 이동) |
+| `ㄹ` | 걀 | 달 |
 
-- 실행하기 전에 스크립트 안의 IP Webcam 주소(`http://<폰 IP>:8080/video`)를 자신의 환경에 맞게 바꿔 주세요.
-- 키 조작: `1` 한글 모델, `2` 숫자 모델, `ESC` 종료
+조합 로직은 [`IPWebcam_test.py`](IPWebcam_test.py)의 자음·모음 입력 분기에 있습니다.
+
+### 한계
+
+쌍자음은 같은 자음을 두 번 연달아 입력해 만듭니다(`ㅂ` + `ㅂ` → `ㅃ`). 그런데 앞 글자에 이미 모음이 있으면, 두 번째 자음이 들어올 때 첫 번째 자음은 받침으로 붙어 있습니다. 이때 다음 글자의 쌍초성인지, 받침과 다음 초성인지 조합기가 구별하지 못해 아래처럼 잘못 조합됩니다.
+
+| 경우 | 입력 | 기대 | 실제 결과 |
+| --- | --- | --- | --- |
+| 받침 된소리 + 모음 | `ㅇㅏㅂㅂㅏ` | 아빠 | **압바** |
+
+## `ㅅ`/`ㅠ` 판별
+
+지문자 `ㅅ`과 `ㅠ`는 손 모양이 같아 MLP만으로는 구분되지 않습니다. 둘은 각각 자음과 모음이라 올 수 있는 자리가 다르다는 점을 이용해, 조합 상태에 따른 규칙과 LSTM을 함께 써서 판별합니다.
+
+| 조합 상태 | 판별 방법 |
+| --- | --- |
+| 비어 있음 | `ㅅ` (글자의 시작에는 자음이 옴) |
+| 초성만 있음 (`ㅅ` 제외) | `ㅠ` (초성 다음에는 모음이 옴) |
+| 초성 `ㅅ`만 있음 | LSTM 판별 (`ㅅ`+`ㅅ`→`ㅆ`/`ㅅ`+`ㅑ`→`샤` 구분 필요) |
+| 초성+중성 이상 | LSTM (받침 `ㅅ`인지 다음 글자의 모음 `ㅠ`인지 문맥 필요) |
+
+- **LSTM**: 앞서 입력된 글자를 자모 단위로 분해해 넣으면 다음 자모를 예측합니다. 예측이 `ㅅ`/`ㅠ`가 아니면 자음은 `ㅅ`, 모음은 `ㅠ`로 판정합니다.
+- **모델**: Embedding(64) → LSTM(128) → Dense(softmax), 홑자모 28개 분류, 최대 20자모 입력
+- **학습 데이터**: `ㅆ`이 들어간 과거형 어미("~했습니다"), `유`·`휴`로 시작하는 단어, `ㅠㅠ`가 들어간 문장 등 두 자모가 헷갈리는 문장 181개를 생성형 AI로 생성
+
+### 한계
+
+- 조합 중인 글자가 없으면 항상 `ㅅ`으로 판정해 `ㅠㅠ`처럼 단독 `ㅠ`는 입력할 수 없습니다.
+- 앞 문맥만 보고 뒤 글자는 반영하지 못 하고, 학습 문장이 적어 특정 어미·단어에 치우쳐 있습니다.
+
+## 설치 및 실행
+
+설치, 실행, 데이터셋·모델을 직접 만드는 방법은 [RUN.md](RUN.md)에 정리했습니다.
 
 ## 파일 구성
 
@@ -57,7 +81,7 @@ python IPWebcam_test.py
 
 | 파일 | 설명 |
 | --- | --- |
-| `collect_datasets_IPWebcam.py` | 라벨을 입력하고 스페이스바를 누르면 잘라낸 손 이미지를 `dataset_raw/<라벨>/`에 저장 |
+| `collect_datasets_IPWebcam.py` | 라벨을 입력하고 스페이스바를 눌 손 이미지를 `dataset_raw/<라벨>/`에 저장 |
 | `get_hand_coords_csv.py` | `dataset_raw`의 이미지에서 손 좌표를 뽑아 `digits.csv`와 `hangul.csv` 생성 |
 | `get_hand_coords_onlyNum.py` | 숫자와 특수 동작 라벨만 뽑아 `digits.csv` 생성 |
 | `get_featured_data_csv.py` | 좌표 CSV를 특징 CSV로 변환 (예: `digits.csv` → `digit_feature.csv`) |
@@ -65,7 +89,7 @@ python IPWebcam_test.py
 | `sign_language_distinction_MLP_model_train.py` | MLP 분류 모델 학습 후 `model_*.h5`, `scaler_*.pkl`, `label_encoder_*.pkl` 저장 |
 | `SiotYu_distinction_LSTM_model_train.py` | `ㅅ`/`ㅠ` 구분용 자모 시퀀스 LSTM 모델 학습 |
 | `SiotYu_distinction_LSTM_model_test.py` | LSTM 모델의 자모 시퀀스 예측 테스트 |
-| `IPWebcam_test.py` | 실시간 인식과 한글 조합 (메인) |
+| `IPWebcam_test.py` | 실시간 인식과 한글 조합 및 입력 |
 | `original_separate_model_test.py` | 이전 버전: 자음, 모음, 숫자 모델을 따로 쓰는 로컬 웹캠 테스트 |
 
 ### 학습 결과물 / 데이터
@@ -78,47 +102,45 @@ python IPWebcam_test.py
 | `non_conversion/`, `with_no_space/`, `미리 받은 파일들/` | 이전 실험 버전의 모델 |
 | `NanumGothic.ttf` | 화면에 한글을 표시하기 위한 나눔고딕 폰트 (SIL Open Font License) |
 
-## 데이터셋
-
-손 사진과 CSV는 용량이 커서 저장소에 넣지 않았습니다. 학습된 모델(`.h5`, `.pkl`)은 저장소에 있으므로 **실시간 인식만 할 때는 데이터가 필요 없습니다.**
-
-### 내려받기
+### 데이터셋 다운로드
 
 [Releases의 `dataset-v1`](https://github.com/HsH1121/DeepSign/releases/tag/dataset-v1)에서 받아 프로젝트 루트에 압축을 풉니다.
 
-| 파일 | 내용 | 압축을 풀면 |
+| 파일 | 내용 | 내용물 |
 | --- | --- | --- |
 | [`dataset_raw.zip`](https://github.com/HsH1121/DeepSign/releases/download/dataset-v1/dataset_raw.zip) | 라벨별 손 이미지 (약 1.4GB) | `dataset_raw/<라벨>/*.jpg` |
 | [`csv_data.zip`](https://github.com/HsH1121/DeepSign/releases/download/dataset-v1/csv_data.zip) | 손 좌표와 특징 CSV | 루트의 `*.csv`, `non_conversion/*.csv` |
 
-### 이전 버전
+## 수정 내역
 
-커밋 기록은 개발 과정의 폴더(`DLP_Project_Original`, `DLP_Project`, `hangul_test` ~ `hangul_test_8`)를 버전 순서대로 담고 있습니다. 각 버전 커밋에는 같은 이름의 태그가 있고, 그 태그의 Release에 해당 버전에서 쓴 CSV(`csv_data.zip`)가 첨부되어 있습니다.
+당시 Git을 사용하지 않아 커밋 이력이 없습니다. 따라서 보관해 둔 버전별 폴더를 2026년 9월에 순서대로 커밋해 정리했습니다.
 
-| 버전 | 내용 | 코드 | CSV |
-| --- | --- | --- | --- |
-| DLP_Project_Original | 숫자 1~10으로 좌표 MLP·LSTM·Conv1D·특징 MLP·EfficientNet·Residual MLP 비교 | [태그](https://github.com/HsH1121/DeepSign/tree/DLP_Project_Original) | [Release](https://github.com/HsH1121/DeepSign/releases/tag/DLP_Project_Original) |
-| DLP_Project | 한글 자모까지 41클래스로 확장, IP Webcam 실시간 테스트 | [태그](https://github.com/HsH1121/DeepSign/tree/DLP_Project) | [Release](https://github.com/HsH1121/DeepSign/releases/tag/DLP_Project) |
-| hangul_test | 손 크기 정규화·0~2π 각도로 특징 재설계, 41클래스 MLP | [태그](https://github.com/HsH1121/DeepSign/tree/hangul_test) | [Release](https://github.com/HsH1121/DeepSign/releases/tag/hangul_test) |
-| hangul_test_2 | 자음/모음/숫자 모델 분리 실험 | [태그](https://github.com/HsH1121/DeepSign/tree/hangul_test_2) | [Release](https://github.com/HsH1121/DeepSign/releases/tag/hangul_test_2) |
-| hangul_test_3 | 실시간 입력 로직(1초 다수결, 한글 조합) 추가 | [태그](https://github.com/HsH1121/DeepSign/tree/hangul_test_3) | [Release](https://github.com/HsH1121/DeepSign/releases/tag/hangul_test_3) |
-| hangul_test_4 | ㅅ/ㅠ 구분 LSTM, 한글↔숫자 전환 손동작 | [태그](https://github.com/HsH1121/DeepSign/tree/hangul_test_4) | [Release](https://github.com/HsH1121/DeepSign/releases/tag/hangul_test_4) |
-| hangul_test_5 | space/back_space 손동작, 22차원 특징 | [태그](https://github.com/HsH1121/DeepSign/tree/hangul_test_5) | [Release](https://github.com/HsH1121/DeepSign/releases/tag/hangul_test_5) |
-| hangul_test_6 | space 제외 모델 비교, 자모 조합 모듈 분리 시도 | [태그](https://github.com/HsH1121/DeepSign/tree/hangul_test_6) | [Release](https://github.com/HsH1121/DeepSign/releases/tag/hangul_test_6) |
-| hangul_test_7 | 스크립트 이름 통일, 실험 파일 정리 | [태그](https://github.com/HsH1121/DeepSign/tree/hangul_test_7) | [Release](https://github.com/HsH1121/DeepSign/releases/tag/hangul_test_7) |
-| hangul_test_8 | 숫자 전용 좌표 추출, 최종 재학습 | [태그](https://github.com/HsH1121/DeepSign/tree/hangul_test_8) | [Release](https://github.com/HsH1121/DeepSign/releases/tag/hangul_test_8) |
+| 버전 | 내용 |
+| --- | --- |
+| DLP_Project_Original | 숫자 1~10으로 좌표 MLP·LSTM·Conv1D·특징 MLP·EfficientNet·Residual MLP 비교 |
+| DLP_Project | 한글 자모까지 41클래스로 확장, IP Webcam 실시간 테스트 |
+| hangul_test | 손 크기 정규화·0~2π 각도로 특징 재설계, 41클래스 MLP |
+| hangul_test_2 | 자음/모음/숫자 모델 분리 실험 |
+| hangul_test_3 | 실시간 입력 로직(1초 다수결, 한글 조합) 추가 |
+| hangul_test_4 | ㅅ/ㅠ 구분 LSTM, 한글↔숫자 전환 손동작 |
+| hangul_test_5 | space/back_space 손동작, 22차원 특징 |
+| hangul_test_6 | space 제외 모델 비교, 자모 조합 모듈 분리 시도 |
+| hangul_test_7 | 스크립트 이름 통일, 실험 파일 정리 |
+| hangul_test_8 | 숫자 전용 좌표 추출, 최종 재학습 |
 
-> 손 이미지는 버전 간 차이가 작아 최신본(`dataset-v1`의 `dataset_raw.zip`)만 제공합니다.
+## 담당 작업
 
-### 직접 만들기
+초기 2인 팀으로 시작했던 프로젝트로, 초기 지숫자 인식 모델 구현과 각 모델간 모델 비교작업(DLP_Project_Original)은 팀원이 진행했고, 아래는 이후 한글 확장 과정에서 제가 맡은 작업입니다.
 
-사진부터 새로 모으거나, 받은 사진으로 CSV와 모델을 다시 만들려면 다음 순서로 실행합니다.
+| 작업 | 내용 | 버전 |
+| --- | --- | --- |
+| 한글 데이터셋 추가 | 숫자 지문자 10클래스 모델에 한글 자음·모음을 더해 41클래스로 확장, IP Webcam 데이터 수집 | DLP_Project |
+| ㅁ·ㅂ·ㅍ 인식 개선 | 손 이미지 크롭 범위를 넓히고(관절 범위 + 여백 80px) 전측면 각도 데이터를 추가해 ㅁ·ㅂ·ㅍ 정확도 90% 이상 달성 | hangul_test |
+| 손바닥/손등 구별 | 기존에는 관절이 어느 쪽으로 굽든 0~180°로 같게 계산돼 손바닥과 손등을 구별하지 못함. 해당 문제를 인식해 0~360°로 계산하여 손바닥과 손등 구분이 가능하도록 함 | hangul_test |
+| 거리 변화 대응 | 손가락 사이 거리를 손 크기(관절 좌표 범위의 대각선)로 나눠, 카메라와의 거리가 달라져도 인식되도록 함 | hangul_test |
+| 한글 자모 조합기 | `hgtk`를 활용한 실시간 조합 알고리즘 구현: 1초 다수결 입력 판정, 초성·중성·종성 조합, 쌍자음·겹모음·겹받침 처리, 종성을 다음 글자 초성으로 넘기기 | hangul_test_3 |
+| `ㅅ`/`ㅠ` 판정 LSTM | 이전에 입력된 자모 시퀀스를 기반으로 다음 자모를 예측해 모양이 같은 `ㅅ`/`ㅠ` 판정 모델 설계 | hangul_test_4, hangul_test_5 |
 
-```text
-collect_datasets_IPWebcam.py   →  dataset_raw/<라벨>/*.jpg
-get_hand_coords_csv.py         →  digits.csv, hangul.csv
-get_featured_data_csv.py       →  *_feature.csv
-sign_language_distinction_MLP_model_train.py  →  model_*.h5, scaler_*.pkl, label_encoder_*.pkl
-```
+## 시연 영상(2배속)
 
-> 각 스크립트의 입력·출력 파일 이름은 코드에 직접 적혀 있으니, 필요하면 수정한 뒤 실행하세요.
+<img width="480" height="270" alt="DeepSign_demo" src="https://github.com/user-attachments/assets/c0139f33-cf82-4c0c-9ac3-dcabf04dd770" />
